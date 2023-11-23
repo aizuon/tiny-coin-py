@@ -1,6 +1,6 @@
-from .base58_ext import base58_encode
-from .ripemd160_ext import ripemd160_hash_binary
-from .sha256_ext import sha256_double_hash_binary, sha256_hash_binary
+from tiny_coin.crypto.base58_ext import base58_encode
+from tiny_coin.crypto.ripemd160_ext import ripemd160_hash_binary
+from tiny_coin.crypto.sha256_ext import sha256_double_hash_binary, sha256_hash_binary
 
 __pub_key_hash_version = "1"
 

@@ -1,4 +1,4 @@
-from src.crypto.wallet import pub_key_to_address
+from tiny_coin.crypto.wallet import pub_key_to_address
 
 
 def test_pub_key_to_address():

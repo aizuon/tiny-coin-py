@@ -1,4 +1,5 @@
-from .sha256_ext import sha256_double_hash_binary
+from tiny_coin.crypto.sha256_ext import sha256_double_hash_binary
+from tiny_coin.utils import str_to_bytes
 
 
 class MerkleNode:
@@ -14,7 +15,7 @@ class MerkleTree:
     def get_root(leaves: list[str]):
         nodes = []
         for leaf in leaves:
-            node = MerkleNode(sha256_double_hash_binary(leaf.encode("ascii")).hex())
+            node = MerkleNode(sha256_double_hash_binary(str_to_bytes(leaf)).hex())
             nodes.append(node)
         return __class__._find_root(nodes)
 
@@ -45,7 +46,7 @@ class MerkleTree:
             for node in chunk:
                 combined_id += node.value
 
-            combined_hash = sha256_double_hash_binary(combined_id.encode("ascii")).hex()
+            combined_hash = sha256_double_hash_binary(str_to_bytes(combined_id)).hex()
 
             node = MerkleNode(combined_hash, chunk)
 
