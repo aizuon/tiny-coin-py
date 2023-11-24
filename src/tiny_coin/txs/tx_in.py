@@ -1,43 +1,28 @@
+from dataclasses import dataclass, field
+
 from tiny_coin.binary_buffer import BinaryBuffer
 from tiny_coin.deserializable import Deserializable
-from tiny_coin.generics import int32
+from tiny_coin.generics import bool8, int32
 from tiny_coin.serializable import Serializable
-from tiny_coin.tx.tx_out_point import TxOutPoint
+from tiny_coin.txs.tx_out_point import TxOutPoint
 
 
+@dataclass(eq=False)
 class TxIn(Serializable, Deserializable):
-    def __init__(
-        self,
-        to_spend: TxOutPoint = None,
-        unlock_sig: bytearray = None,
-        unlock_pub_key: bytearray = None,
-        sequence: int = -1,
-    ) -> None:
-        super().__init__()
-        self.to_spend = to_spend
-        if unlock_sig is None:
-            unlock_sig = bytearray()
-        self.unlock_sig = unlock_sig
-        if unlock_pub_key is None:
-            unlock_pub_key = bytearray()
-        self.unlock_pub_key = unlock_pub_key
-        self.sequence = int32(sequence)
+    to_spend: TxOutPoint = None
+    unlock_sig: bytearray = field(default_factory=bytearray)
+    unlock_pub_key: bytearray = field(default_factory=bytearray)
+    sequence: int | int32 = -1
 
-    def __eq__(self, other):
-        if not isinstance(other, __class__):
-            return False
-        return (
-            self.to_spend == other.to_spend
-            and self.unlock_sig == other.unlock_sig
-            and self.unlock_pub_key == other.unlock_pub_key
-        )
+    def __post_init__(self):
+        self.sequence = int32(self.sequence)
 
     def serialize(self):
         buffer = BinaryBuffer()
 
-        has_to_spend = self.to_spend is not None
+        has_to_spend = bool8(self.to_spend is not None)
         buffer.write(has_to_spend)
-        if has_to_spend:
+        if has_to_spend.value is True:
             buffer.write_raw(self.to_spend.serialize().buffer)
         buffer.write(self.unlock_sig)
         buffer.write(self.unlock_pub_key)
@@ -49,10 +34,10 @@ class TxIn(Serializable, Deserializable):
     def deserialize(buffer: BinaryBuffer):
         tx_in = __class__()
 
-        has_to_spend = buffer.read(bool)
+        has_to_spend = buffer.read(bool8)
         if has_to_spend is None:
             return None
-        if has_to_spend is True:
+        if has_to_spend.value is True:
             tx_in.to_spend = TxOutPoint.deserialize(buffer)
             if tx_in.to_spend is None:
                 return None

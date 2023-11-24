@@ -1,21 +1,18 @@
+from dataclasses import dataclass, field
+
 from tiny_coin.binary_buffer import BinaryBuffer
 from tiny_coin.deserializable import Deserializable
 from tiny_coin.generics import uint64
 from tiny_coin.serializable import Serializable
 
 
+@dataclass(eq=False)
 class TxOut(Serializable, Deserializable):
-    def __init__(self, value: int = 0, to_address: str = None) -> None:
-        super().__init__()
-        if to_address is None:
-            to_address = ""
-        self.value = uint64(value)
-        self.to_address = to_address
+    value: int | uint64 = 0
+    to_address: str = field(default_factory=str)
 
-    def __eq__(self, other):
-        if not isinstance(other, __class__):
-            return False
-        return self.value == other.value and self.to_address == other.to_address
+    def __post_init__(self):
+        self.value = uint64(self.value)
 
     def serialize(self):
         buffer = BinaryBuffer()

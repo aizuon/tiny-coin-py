@@ -26,7 +26,7 @@ class BinaryBuffer:
         self._lock = RLock()
 
     def __eq__(self, other):
-        if not isinstance(other, BinaryBuffer):
+        if not isinstance(other, __class__):
             return False
         return (
             self._buffer == other._buffer
