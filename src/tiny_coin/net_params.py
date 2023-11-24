@@ -1,0 +1,26 @@
+from tiny_coin.generics import (
+    uint8,
+    uint32,
+    uint64,
+)
+
+
+class NetParams:
+    MAX_BLOCK_SERIALIZED_SIZE_IN_BYTES = uint32(1000000)
+
+    COINBASE_MATURITY = uint8(2)
+
+    MAX_FUTURE_BLOCK_TIME_IN_SECS = uint32(60 * 60 * 2)
+
+    COIN = uint64(100000000)
+    TOTAL_COINS = uint64(21000000)
+    MAX_MONEY = uint64(COIN.value * TOTAL_COINS.value)
+
+    TIME_BETWEEN_BLOCKS_IN_SECS_TARGET = uint32(60 * 10)
+    DIFFICULTY_PERIOD_IN_SECS_TARGET = uint32(60 * 60 * 24)
+    DIFFICULTY_PERIOD_IN_BLOCKS = uint32(
+        DIFFICULTY_PERIOD_IN_SECS_TARGET.value
+        // TIME_BETWEEN_BLOCKS_IN_SECS_TARGET.value
+    )
+    INITIAL_DIFFICULTY_BITS = uint8(24)
+    HALVE_SUBSIDY_AFTER_BLOCKS_NUM = uint32(210000)

@@ -20,47 +20,47 @@ from tiny_coin.utils import bytes_to_str, str_to_bytes
 
 class BinaryBuffer:
     def __init__(self, buffer: bytearray | bytes = None):
-        self._buffer = bytearray(buffer) if buffer else bytearray()
-        self._write_offset = len(self._buffer)
-        self._read_offset = 0
-        self._lock = RLock()
+        self.__buffer = bytearray(buffer) if buffer else bytearray()
+        self.__write_offset = len(self.__buffer)
+        self.__read_offset = 0
+        self.__lock = RLock()
 
     def __eq__(self, other):
         if not isinstance(other, __class__):
             return False
         return (
-            self._buffer == other._buffer
-            and self._write_offset == other._write_offset
-            and self._read_offset == other._read_offset
+            self.__buffer == other.__buffer
+            and self.__write_offset == other.__write_offset
+            and self.__read_offset == other.__read_offset
         )
 
     @property
     def buffer(self):
-        return self._buffer
+        return self.__buffer
 
     @property
     def size(self):
-        return len(self._buffer)
+        return len(self.__buffer)
 
     @property
     def write_offset(self):
-        return self._write_offset
+        return self.__write_offset
 
     @property
     def read_offset(self):
-        return self._read_offset
+        return self.__read_offset
 
     def grow_to(self, size: int):
-        with self._lock:
-            assert size > len(self._buffer)
-            self._buffer.extend(bytearray(size - len(self._buffer)))
+        with self.__lock:
+            assert size > len(self.__buffer)
+            self.__buffer.extend(bytearray(size - len(self.__buffer)))
 
     def reserve(self, size: int):
-        with self._lock:
-            self._buffer.extend(bytearray(size))
+        with self.__lock:
+            self.__buffer.extend(bytearray(size))
 
     def write_size(self, obj: int):
-        with self._lock:
+        with self.__lock:
             self.write(uint32(obj))
 
     def write(
@@ -81,7 +81,7 @@ class BinaryBuffer:
         | bytes
         | str,
     ):
-        with self._lock:
+        with self.__lock:
             if isinstance(obj, str):
                 self._write_string(obj)
             elif (
@@ -93,11 +93,13 @@ class BinaryBuffer:
             else:
                 data = struct.pack(obj.fmt, obj.value)
                 self._grow_if_needed(len(data))
-                self._buffer[self._write_offset : self._write_offset + len(data)] = data
-                self._write_offset += len(data)
+                self.__buffer[
+                    self.__write_offset : self.__write_offset + len(data)
+                ] = data
+                self.__write_offset += len(data)
 
     def _write_array(self, obj: Iterable):
-        with self._lock:
+        with self.__lock:
             if isinstance(obj, bytearray) | isinstance(obj, bytes):
                 obj = [uint8(o) for o in obj]
             size = len(obj)
@@ -106,14 +108,14 @@ class BinaryBuffer:
                 self.write(o)
 
     def _write_array_raw(self, obj: Iterable):
-        with self._lock:
+        with self.__lock:
             if isinstance(obj, bytearray) | isinstance(obj, bytes):
                 obj = [uint8(o) for o in obj]
             for o in obj:
                 self.write(o)
 
     def write_raw(self, obj: Iterable | str):
-        with self._lock:
+        with self.__lock:
             if isinstance(obj, str):
                 return self._write_string_raw(obj)
             elif (
@@ -126,15 +128,15 @@ class BinaryBuffer:
                 raise ValueError(f"Unsupported object type: {type(obj)}")
 
     def _write_string(self, obj: str):
-        with self._lock:
+        with self.__lock:
             self._write_array(str_to_bytes(obj))
 
     def _write_string_raw(self, obj: str):
-        with self._lock:
+        with self.__lock:
             self._write_array_raw(str_to_bytes(obj))
 
     def read_size(self):
-        with self._lock:
+        with self.__lock:
             size = self.read(uint32)
             if size is None:
                 return None
@@ -174,7 +176,7 @@ class BinaryBuffer:
         | bytes
         | str
     ):
-        with self._lock:
+        with self.__lock:
             if obj_type == str:
                 return self._read_string()
             elif get_origin(obj_type) is list:
@@ -187,14 +189,14 @@ class BinaryBuffer:
                 return self._read_array(uint8)
             fmt = obj_type.fmt
             size = struct.calcsize(fmt)
-            if len(self._buffer) < self._read_offset + size:
+            if len(self.__buffer) < self.__read_offset + size:
                 return None
-            data = self._buffer[self._read_offset : self._read_offset + size]
-            self._read_offset += size
+            data = self.__buffer[self.__read_offset : self.__read_offset + size]
+            self.__read_offset += size
             return obj_type(struct.unpack(fmt, data)[0])
 
     def _read_array[T](self, obj_type: type[T]) -> Iterable[T]:
-        with self._lock:
+        with self.__lock:
             size = self.read_size()
             if size is None:
                 return None
@@ -213,14 +215,14 @@ class BinaryBuffer:
             return result
 
     def _read_string(self):
-        with self._lock:
+        with self.__lock:
             result = self._read_array(uint8)
             return bytes_to_str(result) if result is not None else None
 
     def _grow_if_needed(self, write_length: int):
-        with self._lock:
-            final_length = self._write_offset + write_length
-            resize_needed = len(self._buffer) <= final_length
+        with self.__lock:
+            final_length = self.__write_offset + write_length
+            resize_needed = len(self.__buffer) <= final_length
 
             if resize_needed:
-                self._buffer.extend(bytearray(final_length - len(self._buffer)))
+                self.__buffer.extend(bytearray(final_length - len(self.__buffer)))

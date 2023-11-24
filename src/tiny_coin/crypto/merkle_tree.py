@@ -17,10 +17,10 @@ class MerkleTree:
         for leaf in leaves:
             node = MerkleNode(sha256_double_hash_binary(str_to_bytes(leaf)).hex())
             nodes.append(node)
-        return __class__._find_root(nodes)
+        return __class__.__find_root(nodes)
 
     @staticmethod
-    def _chunk(nodes: list[MerkleNode], chunk_size: int) -> list[list[MerkleNode]]:
+    def __chunk(nodes: list[MerkleNode], chunk_size: int) -> list[list[MerkleNode]]:
         chunks = []
 
         chunk = []
@@ -38,8 +38,8 @@ class MerkleTree:
         return chunks
 
     @staticmethod
-    def _find_root(nodes: list[MerkleNode]) -> MerkleNode:
-        chunks = __class__._chunk(nodes, 2)
+    def __find_root(nodes: list[MerkleNode]) -> MerkleNode:
+        chunks = __class__.__chunk(nodes, 2)
         new_level = []
         for chunk in chunks:
             combined_id = ""
@@ -52,4 +52,4 @@ class MerkleTree:
 
             new_level.append(node)
 
-        return __class__._find_root(new_level) if len(new_level) > 1 else new_level[0]
+        return __class__.__find_root(new_level) if len(new_level) > 1 else new_level[0]
